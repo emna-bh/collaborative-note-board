@@ -1,19 +1,23 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
 
-  // Security
-  app.use(helmet());
-
-  // Enable CORS (important for frontend)
   app.enableCors();
 
-  // Global validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,7 +26,6 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Collaborative note board API')
     .setDescription('API documentation for the backend')
@@ -33,11 +36,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`===> Server running on http://localhost:${port}`);
-  console.log(`===> Swagger available at http://localhost:${port}/api`);
+  console.log(`==> Server running on http://localhost:${port}`);
+  console.log(`==> Swagger available at http://localhost:${port}/api`);
 }
 
 bootstrap().catch((err) => {
