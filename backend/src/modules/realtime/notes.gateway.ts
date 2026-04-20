@@ -8,6 +8,15 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { AuthService } from '../auth/auth.service';
+
+type AuthenticatedSocket = Socket & {
+  user?: {
+    uid: string;
+    email?: string;
+    name?: string;
+  };
+};
 
 @WebSocketGateway({
   cors: {
@@ -20,12 +29,32 @@ export class NotesGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly roomName = 'notes-board';
 
-  handleConnection(client: Socket) {
-    client.join(this.roomName);
-    console.log(`Socket connected: ${client.id}`);
+  constructor(private readonly authService: AuthService) {}
+
+  async handleConnection(client: AuthenticatedSocket) {
+    const token = client.handshake.auth?.token;
+
+    if (!token) {
+      client.emit('error', 'Missing authentication token');
+      client.disconnect(true);
+      return;
+    }
+
+    try {
+      const user = await this.authService.verifyToken(token);
+      client.user = user;
+      client.join(this.roomName);
+
+      console.log(`Socket connected: ${client.id} (${user.uid})`);
+    } catch (error) {
+      console.error('Socket auth failed:', error);
+      client.emit('error', 'Invalid authentication token');
+      client.disconnect(true);
+      return;
+    }
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: AuthenticatedSocket) {
     console.log(`Socket disconnected: ${client.id}`);
   }
 
