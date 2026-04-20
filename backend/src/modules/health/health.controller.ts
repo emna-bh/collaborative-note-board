@@ -9,9 +9,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-@ApiTags('test-auth')
+@ApiTags('Test')
 @ApiBearerAuth()
-@Controller('test-auth')
+@Controller('Test-auth')
 export class HealthController {
   @Get('me')
   @UseGuards(FirebaseAuthGuard)
