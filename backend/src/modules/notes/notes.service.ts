@@ -5,17 +5,21 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 import { QueryNotesDto } from './dto/query-notes.dto';
 import { CurrentUser } from '../auth/interfaces/current-user.interface';
 import { Note } from './entities/note.entity';
+import { NotesGateway } from '../realtime/notes.gateway';
 
 @Injectable()
 export class NotesService {
-  constructor(private readonly notesRepository: NotesRepository) {}
+  constructor(
+    private readonly notesRepository: NotesRepository,
+    private readonly notesGateway: NotesGateway,
+  ) {}
 
   async create(dto: CreateNoteDto, user: CurrentUser): Promise<Note> {
     const now = new Date().toISOString();
     const existingNotes = await this.notesRepository.findAll();
     const nextPosition = dto.position ?? existingNotes.length;
 
-    return this.notesRepository.create({
+    const note = await this.notesRepository.create({
       title: dto.title,
       content: dto.content,
       color: dto.color ?? null,
@@ -24,6 +28,8 @@ export class NotesService {
       createdAt: now,
       updatedAt: now,
     });
+    this.notesGateway.emitNoteCreated(note);
+    return note;
   }
 
   async findAll(query: QueryNotesDto): Promise<Note[]> {
@@ -49,15 +55,18 @@ export class NotesService {
       updatedAt,
     });
 
-    return {
+    const updatedNote = {
       ...note,
       ...dto,
       updatedAt,
     };
+    this.notesGateway.emitNoteUpdated(updatedNote);
+    return updatedNote;
   }
 
   async remove(noteId: string): Promise<void> {
     await this.findOne(noteId);
     await this.notesRepository.delete(noteId);
+    this.notesGateway.emitNoteDeleted(noteId);
   }
 }
