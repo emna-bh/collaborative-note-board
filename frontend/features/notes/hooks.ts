@@ -1,9 +1,21 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createNote, deleteNote, getNotes, updateNote } from './api';
+import {
+  createNote,
+  deleteNote,
+  getNotes,
+  reorderNotes,
+  updateNote,
+} from './api';
 import { notesKeys } from './query-keys';
-import type { CreateNoteInput, Note, UpdateNoteInput } from './types';
+import type {
+  CreateNoteInput,
+  Note,
+  ReorderNotesInput,
+  UpdateNoteInput,
+} from './types';
+import { applyOrderedIds, sortNotesByPosition } from './utils';
 
 export function useNotes(enabled = true) {
   return useQuery({
@@ -28,14 +40,17 @@ export function useCreateNote() {
         id: `temp-${Date.now()}`,
         title: input.title,
         content: input.content,
+        color: input.color,
+        creatorId: 'current-user',
+        position: previousNotes.length,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<Note[]>(notesKeys.all, [
-        optimisticNote,
-        ...previousNotes,
-      ]);
+      queryClient.setQueryData<Note[]>(
+        notesKeys.all,
+        sortNotesByPosition([...previousNotes, optimisticNote])
+      );
 
       return { previousNotes };
     },
@@ -68,14 +83,16 @@ export function useUpdateNote() {
         queryClient.getQueryData<Note[]>(notesKeys.all) || [];
 
       queryClient.setQueryData<Note[]>(notesKeys.all, (old = []) =>
-        old.map((note) =>
-          note.id === id
-            ? {
-                ...note,
-                ...input,
-                updatedAt: new Date().toISOString(),
-              }
-            : note
+        sortNotesByPosition(
+          old.map((note) =>
+            note.id === id
+              ? {
+                  ...note,
+                  ...input,
+                  updatedAt: new Date().toISOString(),
+                }
+              : note
+          )
         )
       );
 
@@ -110,6 +127,36 @@ export function useDeleteNote() {
       return { previousNotes };
     },
     onError: (_error, _id, context) => {
+      if (context?.previousNotes) {
+        queryClient.setQueryData(notesKeys.all, context.previousNotes);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: notesKeys.all });
+    },
+  });
+}
+
+export function useReorderNotes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: ReorderNotesInput) => reorderNotes(input),
+    onMutate: async ({ noteIds }) => {
+      await queryClient.cancelQueries({ queryKey: notesKeys.all });
+
+      const previousNotes =
+        queryClient.getQueryData<Note[]>(notesKeys.all) || [];
+      const updatedAt = new Date().toISOString();
+
+      queryClient.setQueryData<Note[]>(
+        notesKeys.all,
+        applyOrderedIds(previousNotes, noteIds, updatedAt)
+      );
+
+      return { previousNotes };
+    },
+    onError: (_error, _input, context) => {
       if (context?.previousNotes) {
         queryClient.setQueryData(notesKeys.all, context.previousNotes);
       }
