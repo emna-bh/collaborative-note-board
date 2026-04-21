@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -59,8 +60,9 @@ export class NotesController {
   }
 
   @Delete(':noteId')
+  @HttpCode(204)
   @ApiOperation({ summary: 'Delete a note' })
-  @ApiResponse({ status: 200, description: 'Note deleted' })
+  @ApiResponse({ status: 204, description: 'Note deleted' })
   remove(@Param('noteId') noteId: string) {
     return this.notesService.remove(noteId);
   }
