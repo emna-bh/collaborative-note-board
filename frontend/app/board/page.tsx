@@ -7,6 +7,7 @@ import { InlineNoteForm } from '@/components/notes/inline-note-form';
 import { NoteFormDialog } from '@/components/notes/note-form-dialog';
 import { NotesGrid } from '@/components/notes/notes-grid';
 import { NotesSkeleton } from '@/components/notes/notes-skeleton';
+import { LoginForm } from '@/components/auth/login-form';
 import {
   useCreateNote,
   useDeleteNote,
@@ -17,11 +18,14 @@ import { notesKeys } from '@/features/notes/query-keys';
 import type { Note } from '@/features/notes/types';
 import type { NoteFormValues } from '@/features/notes/schema';
 import { socket } from '@/lib/socket';
+import { useAuth } from '@/components/providers/auth-provider';
 
 export default function BoardPage() {
+  const { user, loading, signOut } = useAuth();
   const queryClient = useQueryClient();
-
-  const { data: notes = [], isLoading, isError, error, refetch } = useNotes();
+  const { data: notes = [], isLoading, isError, error, refetch } = useNotes(
+    Boolean(user)
+  );
   const createMutation = useCreateNote();
   const updateMutation = useUpdateNote();
   const deleteMutation = useDeleteNote();
@@ -29,8 +33,23 @@ export default function BoardPage() {
   const [open, setOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [socketError, setSocketError] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
+    if (!user) {
+      socket.disconnect();
+      return;
+    }
+
+    const handleConnect = () => {
+      setSocketError('');
+    };
+
+    const handleConnectError = (error: Error) => {
+      setSocketError(error.message || 'Realtime connection failed');
+    };
+
     socket.connect();
 
     const handleCreated = (note: Note) => {
@@ -53,17 +72,29 @@ export default function BoardPage() {
       );
     };
 
+    socket.on('connect', handleConnect);
+    socket.on('connect_error', handleConnectError);
     socket.on('note.created', handleCreated);
     socket.on('note.updated', handleUpdated);
     socket.on('note.deleted', handleDeleted);
 
     return () => {
+      socket.off('connect', handleConnect);
+      socket.off('connect_error', handleConnectError);
       socket.off('note.created', handleCreated);
       socket.off('note.updated', handleUpdated);
       socket.off('note.deleted', handleDeleted);
       socket.disconnect();
     };
-  }, [queryClient]);
+  }, [queryClient, user]);
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <LoginForm />;
+  }
 
   const handleEdit = (note: Note) => {
     setSelectedNote(note);
@@ -95,13 +126,33 @@ export default function BoardPage() {
     setSelectedNote(null);
   };
 
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      await signOut();
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Shared Notes Board</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Create, edit and collaborate on notes in real time.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Shared Notes Board</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Create, edit and collaborate on notes in real time.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+        >
+          {isSigningOut ? 'Signing out...' : 'Logout'}
+        </button>
       </div>
 
       <div className="mb-6">
@@ -110,6 +161,14 @@ export default function BoardPage() {
           isSubmitting={createMutation.isPending}
         />
       </div>
+
+      {socketError && (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-800">
+            Realtime connection failed: {socketError}
+          </p>
+        </div>
+      )}
 
       {isLoading && <NotesSkeleton />}
 
