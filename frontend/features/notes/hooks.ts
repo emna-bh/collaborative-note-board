@@ -5,10 +5,11 @@ import { createNote, deleteNote, getNotes, updateNote } from './api';
 import { notesKeys } from './query-keys';
 import type { CreateNoteInput, Note, UpdateNoteInput } from './types';
 
-export function useNotes() {
+export function useNotes(enabled = true) {
   return useQuery({
     queryKey: notesKeys.all,
     queryFn: getNotes,
+    enabled,
   });
 }
 

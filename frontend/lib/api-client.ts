@@ -1,3 +1,5 @@
+import { AuthService } from './auth';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
@@ -9,15 +11,31 @@ export async function apiClient<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const { body, headers, ...rest } = options;
+  const hasBody = body !== undefined;
+  const requestHeaders = new Headers(headers);
+
+  // Firebase Auth owns sign-in; backend requests reuse the active ID token.
+  const token = await AuthService.getIdToken();
+
+  if (token) {
+    requestHeaders.set('Authorization', `Bearer ${token}`);
+  }
+
+  if (
+    hasBody &&
+    !requestHeaders.has('Content-Type') &&
+    !(typeof FormData !== 'undefined' && body instanceof FormData)
+  ) {
+    requestHeaders.set('Content-Type', 'application/json');
+  }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...rest,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
+    headers: requestHeaders,
+    body:
+      hasBody && !(typeof FormData !== 'undefined' && body instanceof FormData)
+        ? JSON.stringify(body)
+        : (body as BodyInit | null | undefined),
   });
 
   if (!response.ok) {
@@ -32,6 +50,12 @@ export async function apiClient<T>(
   }
 
   if (response.status === 204) {
+    return null as T;
+  }
+
+  const contentType = response.headers.get('content-type');
+
+  if (!contentType?.includes('application/json')) {
     return null as T;
   }
 
