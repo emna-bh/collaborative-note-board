@@ -15,3 +15,17 @@ input,
 textarea {
   font: inherit;
 }
+
+button:not(:disabled),
+button:not(:disabled) *,
+[role="button"]:not([aria-disabled="true"]),
+[role="button"]:not([aria-disabled="true"]) * {
+  cursor: pointer !important;
+}
+
+button:disabled,
+button:disabled *,
+[aria-disabled="true"],
+[aria-disabled="true"] * {
+  cursor: not-allowed !important;
+}
