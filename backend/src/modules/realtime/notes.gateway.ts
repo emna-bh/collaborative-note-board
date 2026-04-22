@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import type { CurrentUser } from '../auth/interfaces/current-user.interface';
+import type { Activity } from '../activity/entities/activity.entity';
 import type { Note } from '../notes/entities/note.entity';
 
 const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -107,5 +108,9 @@ export class NotesGateway
     notes: Array<Pick<Note, 'id' | 'position' | 'updatedAt'>>,
   ) {
     this.server.to(this.roomName).emit('notes.reordered', notes);
+  }
+
+  emitActivityCreated(activity: Activity) {
+    this.server.to(this.roomName).emit('activity.created', activity);
   }
 }

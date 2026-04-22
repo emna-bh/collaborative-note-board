@@ -9,12 +9,14 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 import { QueryNotesDto } from './dto/query-notes.dto';
 import { CurrentUser } from '../auth/interfaces/current-user.interface';
 import { Note } from './entities/note.entity';
+import { ActivityService } from '../activity/activity.service';
 import { NotesGateway } from '../realtime/notes.gateway';
 
 @Injectable()
 export class NotesService {
   constructor(
     private readonly notesRepository: NotesRepository,
+    private readonly activityService: ActivityService,
     private readonly notesGateway: NotesGateway,
   ) {}
 
@@ -35,6 +37,13 @@ export class NotesService {
       updatedAt: now,
     });
     this.notesGateway.emitNoteCreated(note);
+    const activity = await this.activityService.record({
+      type: 'created',
+      noteId: note.id,
+      noteTitle: note.title,
+      user,
+    });
+    this.notesGateway.emitActivityCreated(activity);
     return note;
   }
 
@@ -52,7 +61,7 @@ export class NotesService {
     return note;
   }
 
-  async update(noteId: string, dto: UpdateNoteDto): Promise<Note> {
+  async update(noteId: string, dto: UpdateNoteDto, user: CurrentUser): Promise<Note> {
     const note = await this.findOne(noteId);
     const updatedAt = new Date().toISOString();
     const { position, ...changes } = dto;
@@ -90,6 +99,13 @@ export class NotesService {
       updatedAt,
     };
     this.notesGateway.emitNoteUpdated(updatedNote);
+    const activity = await this.activityService.record({
+      type: 'edited',
+      noteId: updatedNote.id,
+      noteTitle: updatedNote.title,
+      user,
+    });
+    this.notesGateway.emitActivityCreated(activity);
     return updatedNote;
   }
 
@@ -117,10 +133,17 @@ export class NotesService {
     return reorderedNotes;
   }
 
-  async remove(noteId: string): Promise<void> {
-    await this.findOne(noteId);
+  async remove(noteId: string, user: CurrentUser): Promise<void> {
+    const note = await this.findOne(noteId);
     await this.notesRepository.delete(noteId);
     this.notesGateway.emitNoteDeleted(noteId);
+    const activity = await this.activityService.record({
+      type: 'deleted',
+      noteId,
+      noteTitle: note.title,
+      user,
+    });
+    this.notesGateway.emitActivityCreated(activity);
   }
 
   private async reorderSingleNote(

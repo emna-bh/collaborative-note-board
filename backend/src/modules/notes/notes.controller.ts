@@ -62,15 +62,22 @@ export class NotesController {
 
   @Patch(':noteId')
   @ApiOperation({ summary: 'Update a note' })
-  update(@Param('noteId') noteId: string, @Body() dto: UpdateNoteDto) {
-    return this.notesService.update(noteId, dto);
+  update(
+    @Param('noteId') noteId: string,
+    @Body() dto: UpdateNoteDto,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return this.notesService.update(noteId, dto, user);
   }
 
   @Delete(':noteId')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete a note' })
   @ApiResponse({ status: 204, description: 'Note deleted' })
-  remove(@Param('noteId') noteId: string) {
-    return this.notesService.remove(noteId);
+  remove(
+    @Param('noteId') noteId: string,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return this.notesService.remove(noteId, user);
   }
 }
