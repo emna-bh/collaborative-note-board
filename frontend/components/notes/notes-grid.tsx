@@ -6,6 +6,7 @@ import { NoteCard } from './note-card';
 
 type Props = {
   leadingCard?: ReactNode;
+  trailingCard?: ReactNode;
   notes: Note[];
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
@@ -16,6 +17,7 @@ type Props = {
 
 export function NotesGrid({
   leadingCard,
+  trailingCard,
   notes,
   onEdit,
   onDelete,
@@ -102,6 +104,8 @@ export function NotesGrid({
           }}
         />
       ))}
+
+      {trailingCard}
     </div>
   );
 }

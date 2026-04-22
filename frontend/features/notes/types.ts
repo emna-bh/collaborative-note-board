@@ -6,6 +6,8 @@ export type Note = {
   content: string;
   color: NoteColor | null;
   creatorId: string;
+  creatorEmail?: string | null;
+  creatorName?: string | null;
   position: number;
   createdAt: string;
   updatedAt: string;

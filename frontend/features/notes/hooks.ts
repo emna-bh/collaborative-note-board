@@ -16,6 +16,7 @@ import type {
   UpdateNoteInput,
 } from './types';
 import { applyOrderedIds, sortNotesByPosition } from './utils';
+import { AuthService } from '@/lib/auth';
 
 export function useNotes(enabled = true) {
   return useQuery({
@@ -35,13 +36,16 @@ export function useCreateNote() {
 
       const previousNotes =
         queryClient.getQueryData<Note[]>(notesKeys.all) || [];
+      const currentUser = AuthService.getCurrentUser();
 
       const optimisticNote: Note = {
         id: `temp-${Date.now()}`,
         title: input.title,
         content: input.content,
         color: input.color,
-        creatorId: 'current-user',
+        creatorId: currentUser?.uid ?? 'current-user',
+        creatorEmail: currentUser?.email ?? null,
+        creatorName: currentUser?.displayName ?? null,
         position: previousNotes.length,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

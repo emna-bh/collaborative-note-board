@@ -6,7 +6,6 @@ import { noteSchema, type NoteFormValues } from '@/features/notes/schema';
 import {
   DEFAULT_NOTE_COLOR,
   getNoteChromeStyle,
-  getNoteColorLabel,
   getNoteGlowStyle,
   getNoteSurfaceStyle,
 } from '@/features/notes/colors';
