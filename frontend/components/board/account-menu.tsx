@@ -78,7 +78,7 @@ export function AccountMenu({
         aria-label="Open account menu"
         aria-expanded={open}
         title={userLabel}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(237,244,255,0.78))] text-sm font-semibold text-slate-700 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.4)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_34px_-24px_rgba(15,23,42,0.46)]"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.96),#72767dc7)] text-sm font-semibold text-slate-700 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.4)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_34px_-24px_rgba(15,23,42,0.46)]"
       >
         {userInitial}
       </button>
