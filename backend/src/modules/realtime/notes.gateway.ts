@@ -63,7 +63,6 @@ export class NotesGateway
     }
 
     await client.join(this.roomName);
-    console.log(`Socket connected: ${client.id} (${client.user.uid})`);
   }
 
   handleDisconnect(client: AuthenticatedSocket) {
@@ -93,24 +92,20 @@ export class NotesGateway
   }
 
   emitNoteCreated(note: unknown) {
-    console.log('emit note.created', note);
     this.server.to(this.roomName).emit('note.created', note);
   }
 
   emitNoteUpdated(note: unknown) {
-    console.log('emit note.updated', note);
     this.server.to(this.roomName).emit('note.updated', note);
   }
 
   emitNoteDeleted(noteId: string) {
-    console.log('emit note.deleted', { id: noteId });
     this.server.to(this.roomName).emit('note.deleted', { id: noteId });
   }
 
   emitNotesReordered(
     notes: Array<Pick<Note, 'id' | 'position' | 'updatedAt'>>,
   ) {
-    console.log('emit notes.reordered', notes);
     this.server.to(this.roomName).emit('notes.reordered', notes);
   }
 }
