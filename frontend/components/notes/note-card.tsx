@@ -1,10 +1,17 @@
 import type { Note } from '@/features/notes/types';
-import ReactMarkdown from 'react-markdown';
 import {
   getNoteChromeStyle,
   getNoteGlowStyle,
   getNoteSurfaceStyle,
 } from '@/features/notes/colors';
+import { NoteCardMeta } from './note-card-meta';
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  GripDotsIcon,
+  TrashIcon,
+} from './note-card-icons';
+import { NoteMarkdownPreview } from './note-markdown-preview';
 
 type Props = {
   note: Note;
@@ -23,111 +30,6 @@ type Props = {
   onDragEnd: () => void;
 };
 
-function GripDotsIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      className="h-4 w-4 fill-current"
-    >
-      {[
-        [4, 4],
-        [8, 4],
-        [12, 4],
-        [4, 8],
-        [8, 8],
-        [12, 8],
-        [4, 12],
-        [8, 12],
-        [12, 12],
-      ].map(([cx, cy]) => (
-        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.1" />
-      ))}
-    </svg>
-  );
-}
-
-function ChevronUpIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      className="h-4 w-4 stroke-current"
-      fill="none"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m5 12 5-5 5 5" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      className="h-4 w-4 stroke-current"
-      fill="none"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m5 8 5 5 5-5" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      className="h-4 w-4 stroke-current"
-      fill="none"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4.5 6h11" />
-      <path d="M8 6V4.8c0-.44.36-.8.8-.8h2.4c.44 0 .8.36.8.8V6" />
-      <path d="M7 8.5v5.5" />
-      <path d="M10 8.5v5.5" />
-      <path d="M13 8.5v5.5" />
-      <path d="m6 6 .55 8.01c.03.55.49.99 1.05.99h4.8c.56 0 1.02-.44 1.05-.99L14 6" />
-    </svg>
-  );
-}
-
-function formatUpdatedAt(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '--:-- --/--/----';
-  }
-
-  const twoDigits = (part: number) => part.toString().padStart(2, '0');
-
-  return `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())} ${twoDigits(
-    date.getDate()
-  )}/${twoDigits(date.getMonth() + 1)}/${date.getFullYear()}`;
-}
-
-function getCreatorLabel(note: Note) {
-  return note.creatorEmail || note.creatorName || note.creatorId;
-}
-
-function getCreatorInitial(note: Note) {
-  const label = (note.creatorName || note.creatorEmail || note.creatorId || 'U').trim();
-
-  return label.charAt(0).toUpperCase() || 'U';
-}
-
-function shouldShowOverflowIndicator(content: string) {
-  return content.trim().length > 180;
-}
-
 export function NoteCard({
   note,
   onEdit,
@@ -145,9 +47,6 @@ export function NoteCard({
   onDragEnd,
 }: Props) {
   const controlStyle = getNoteChromeStyle(note.color, 0.58);
-  const showOverflowIndicator = shouldShowOverflowIndicator(note.content);
-  const creatorLabel = getCreatorLabel(note);
-  const creatorInitial = getCreatorInitial(note);
 
   return (
     <article
@@ -218,75 +117,11 @@ export function NoteCard({
             {note.title}
           </h3>
 
-          <div className="relative">
-            <div className="max-h-20 overflow-hidden text-sm leading-6 text-slate-700">
-              <ReactMarkdown
-                components={{
-                  h1: ({ children }) => (
-                    <h4 className="mb-2 text-base font-semibold text-slate-900">{children}</h4>
-                  ),
-                  h2: ({ children }) => (
-                    <h4 className="mb-2 text-sm font-semibold text-slate-900">{children}</h4>
-                  ),
-                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                  ul: ({ children }) => (
-                    <ul className="mb-2 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="mb-2 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>
-                  ),
-                  li: ({ children }) => <li>{children}</li>,
-                  blockquote: ({ children }) => (
-                    <blockquote className="mb-2 border-l-2 border-slate-400/50 pl-3 italic text-slate-600 last:mb-0">
-                      {children}
-                    </blockquote>
-                  ),
-                  code: ({ children }) => (
-                    <code className="rounded-md bg-white/75 px-1.5 py-0.5 text-[13px]">
-                      {children}
-                    </code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre className="mb-2 overflow-x-auto rounded-2xl bg-white/75 p-3 text-[13px] last:mb-0">
-                      {children}
-                    </pre>
-                  ),
-                  strong: ({ children }) => (
-                    <strong className="font-semibold text-slate-900">{children}</strong>
-                  ),
-                }}
-              >
-                {note.content}
-              </ReactMarkdown>
-            </div>
-
-            {showOverflowIndicator && (
-              <>
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.92)_72%)]" />
-                <span className="pointer-events-none absolute bottom-0 right-0 text-xs font-medium tracking-[0.08em] text-slate-500">
-                  (...)
-                </span>
-              </>
-            )}
-          </div>
+          <NoteMarkdownPreview content={note.content} />
         </button>
 
         <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <div
-              title={creatorLabel}
-              aria-label={creatorLabel}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/72 text-[11px] font-semibold text-slate-700 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.4)]"
-            >
-              {creatorInitial}
-            </div>
-            <p
-              className="truncate text-xs font-medium text-slate-500"
-              title={creatorLabel}
-            >
-              {formatUpdatedAt(note.updatedAt)}
-            </p>
-          </div>
+          <NoteCardMeta note={note} />
 
           <button
             type="button"
