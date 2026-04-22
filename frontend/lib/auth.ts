@@ -1,4 +1,5 @@
 import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
@@ -14,6 +15,15 @@ export interface AuthUser {
 }
 
 export class AuthService {
+  static async signUp(email: string, password: string): Promise<User> {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    return userCredential.user;
+  }
+
   static async signIn(email: string, password: string): Promise<User> {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;

@@ -7,6 +7,7 @@ import { AuthService } from '@/lib/auth';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -30,12 +31,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AuthService.signIn(email, password);
   };
 
+  const signUp = async (email: string, password: string) => {
+    await AuthService.signUp(email, password);
+  };
+
   const signOut = async () => {
     await AuthService.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
