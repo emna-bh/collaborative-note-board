@@ -29,3 +29,45 @@ button:disabled *,
 [aria-disabled="true"] * {
   cursor: not-allowed !important;
 }
+
+@keyframes activityFeedEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.97);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes activityFeedHighlight {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.92);
+  }
+
+  18% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleX(1.04);
+  }
+}
+
+.activity-feed-item-new {
+  animation: activityFeedEntry 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.activity-feed-highlight {
+  animation: activityFeedHighlight 2.1s ease-out forwards;
+}

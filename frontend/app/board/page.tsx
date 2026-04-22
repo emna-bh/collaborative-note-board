@@ -1,6 +1,7 @@
 'use client';
 
 import { useDeferredValue, useState } from 'react';
+import { ActivityFeed } from '@/components/activity/activity-feed';
 import { BoardHeader } from '@/components/board/board-header';
 import { DeleteNoteDialog } from '@/components/board/delete-note-dialog';
 import { EmptyState } from '@/components/notes/empty-state';
@@ -9,6 +10,8 @@ import { NoteFormDialog } from '@/components/notes/note-form-dialog';
 import { NotesGrid } from '@/components/notes/notes-grid';
 import { NotesSkeleton } from '@/components/notes/notes-skeleton';
 import { LoginForm } from '@/components/auth/login-form';
+import { useActivities } from '@/features/activity/hooks';
+import { ACTIVITY_FEED_FETCH_LIMIT } from '@/features/activity/query-keys';
 import {
   useCreateNote,
   useDeleteNote,
@@ -23,6 +26,13 @@ import { useAuth } from '@/components/providers/auth-provider';
 
 export default function BoardPage() {
   const { user, loading, signOut } = useAuth();
+  const {
+    data: activities = [],
+    isLoading: isActivitiesLoading,
+    isError: isActivitiesError,
+    error: activitiesError,
+    refetch: refetchActivities,
+  } = useActivities(Boolean(user), ACTIVITY_FEED_FETCH_LIMIT);
   const { data: notes = [], isLoading, isError, error, refetch } = useNotes(
     Boolean(user)
   );
@@ -154,47 +164,61 @@ export default function BoardPage() {
           </div>
         )}
 
-        {isLoading && <NotesSkeleton />}
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <section>
+            {isLoading && <NotesSkeleton />}
 
-        {isError && (
-          <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            <InlineNoteForm
-              onSubmit={handleCreate}
-              isSubmitting={createMutation.isPending}
-            />
+            {isError && (
+              <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <InlineNoteForm
+                  onSubmit={handleCreate}
+                  isSubmitting={createMutation.isPending}
+                />
 
-            <div className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.35)] backdrop-blur-sm">
-              <p className="text-sm text-red-600">
-                {error instanceof Error ? error.message : 'Failed to load notes'}
-              </p>
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="mt-4 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        )}
+                <div className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.35)] backdrop-blur-sm">
+                  <p className="text-sm text-red-600">
+                    {error instanceof Error ? error.message : 'Failed to load notes'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => refetch()}
+                    className="mt-4 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
 
-        {!isLoading && !isError && (
-          <NotesGrid
-            leadingCard={
-              <InlineNoteForm
-                onSubmit={handleCreate}
-                isSubmitting={createMutation.isPending}
+            {!isLoading && !isError && (
+              <NotesGrid
+                leadingCard={
+                  <InlineNoteForm
+                    onSubmit={handleCreate}
+                    isSubmitting={createMutation.isPending}
+                  />
+                }
+                trailingCard={emptyStateCard}
+                notes={filteredNotes}
+                onEdit={handleEdit}
+                onDelete={handleDeleteRequest}
+                onReorder={handleReorder}
+                deletingId={deletingId}
+                isReordering={reorderMutation.isPending || isFiltering}
               />
-            }
-            trailingCard={emptyStateCard}
-            notes={filteredNotes}
-            onEdit={handleEdit}
-            onDelete={handleDeleteRequest}
-            onReorder={handleReorder}
-            deletingId={deletingId}
-            isReordering={reorderMutation.isPending || isFiltering}
+            )}
+          </section>
+
+          <ActivityFeed
+            activities={activities}
+            isLoading={isActivitiesLoading}
+            isError={isActivitiesError}
+            error={activitiesError}
+            onRetry={() => {
+              void refetchActivities();
+            }}
           />
-        )}
+        </div>
       </div>
 
       <NoteFormDialog
