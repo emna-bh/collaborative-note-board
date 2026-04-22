@@ -7,6 +7,27 @@ export class NotesRepository {
   private db = firestoreDb;
   private collection = this.db.collection('notes');
 
+  private mapDocToNote(
+    doc:
+      | FirebaseFirestore.QueryDocumentSnapshot
+      | FirebaseFirestore.DocumentSnapshot,
+  ): Note {
+    const data = doc.data() as Omit<Note, 'id'>;
+
+    return {
+      id: doc.id,
+      title: data.title,
+      content: data.content,
+      color: data.color ?? null,
+      creatorId: data.creatorId,
+      creatorEmail: data.creatorEmail ?? null,
+      creatorName: data.creatorName ?? null,
+      position: data.position,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+  }
+
   async create(note: Omit<Note, 'id'>): Promise<Note> {
     const docRef = await this.collection.add(note);
     return { id: docRef.id, ...note };
@@ -26,10 +47,7 @@ export class NotesRepository {
 
     const snapshot = await query.get();
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Note, 'id'>),
-    }));
+    return snapshot.docs.map((doc) => this.mapDocToNote(doc));
   }
 
   async findById(noteId: string): Promise<Note | null> {
@@ -37,14 +55,26 @@ export class NotesRepository {
 
     if (!doc.exists) return null;
 
-    return {
-      id: doc.id,
-      ...(doc.data() as Omit<Note, 'id'>),
-    };
+    return this.mapDocToNote(doc);
   }
 
   async update(noteId: string, data: Partial<Note>): Promise<void> {
     await this.collection.doc(noteId).update(data);
+  }
+
+  async reorder(
+    notes: Array<Pick<Note, 'id' | 'position' | 'updatedAt'>>,
+  ): Promise<void> {
+    const batch = this.db.batch();
+
+    notes.forEach((note) => {
+      batch.update(this.collection.doc(note.id), {
+        position: note.position,
+        updatedAt: note.updatedAt,
+      });
+    });
+
+    await batch.commit();
   }
 
   async delete(noteId: string): Promise<void> {

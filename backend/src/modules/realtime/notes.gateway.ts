@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import type { CurrentUser } from '../auth/interfaces/current-user.interface';
+import type { Note } from '../notes/entities/note.entity';
 
 const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
 
@@ -104,5 +105,12 @@ export class NotesGateway
   emitNoteDeleted(noteId: string) {
     console.log('emit note.deleted', { id: noteId });
     this.server.to(this.roomName).emit('note.deleted', { id: noteId });
+  }
+
+  emitNotesReordered(
+    notes: Array<Pick<Note, 'id' | 'position' | 'updatedAt'>>,
+  ) {
+    console.log('emit notes.reordered', notes);
+    this.server.to(this.roomName).emit('notes.reordered', notes);
   }
 }

@@ -23,6 +23,7 @@ import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { QueryNotesDto } from './dto/query-notes.dto';
+import { ReorderNotesDto } from './dto/reorder-notes.dto';
 
 @ApiTags('notes')
 @ApiBearerAuth()
@@ -51,6 +52,12 @@ export class NotesController {
   @ApiOperation({ summary: 'Get one note' })
   findOne(@Param('noteId') noteId: string) {
     return this.notesService.findOne(noteId);
+  }
+
+  @Patch('reorder')
+  @ApiOperation({ summary: 'Reorder notes on the board' })
+  reorder(@Body() dto: ReorderNotesDto) {
+    return this.notesService.reorder(dto.noteIds);
   }
 
   @Patch(':noteId')
