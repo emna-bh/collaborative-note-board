@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, IsNumber } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { NOTE_COLORS } from '../note-colors';
 
 export class CreateNoteDto {
   @ApiProperty()
@@ -7,18 +15,20 @@ export class CreateNoteDto {
   @MaxLength(120)
   title!: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Markdown content for the note body',
+  })
   @IsString()
   content!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsIn(NOTE_COLORS)
   color?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
+  @IsInt()
+  @Min(0)
   position?: number;
 }

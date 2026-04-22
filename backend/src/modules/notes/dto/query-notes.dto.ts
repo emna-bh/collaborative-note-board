@@ -1,9 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional } from 'class-validator';
+import { NOTE_COLORS } from '../note-colors';
 
 export class QueryNotesDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsIn(NOTE_COLORS)
   color?: string;
 }
