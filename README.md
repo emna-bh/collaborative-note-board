@@ -159,12 +159,11 @@ At a high level:
 
 ### What I would improve next
 
-- Bring the Docker Compose setup from the other branch into this branch, then polish it with health checks, clearer service dependencies, and optional profiles for seeding or emulator-only runs.
 - Add a short config validation step during startup so missing or invalid environment variables fail fast with clear messages.
-- Expand automated tests around realtime flows, authorization rules, and note reordering edge cases.
+- Add a collaborative cursor presence to show who’s currently viewing the board.
 - Add pagination or cursors for older activity records instead of treating the feed as a small recent list.
 - Separate infrastructure concerns more clearly for local, test, and production environments.
-- Add production-readiness basics such as structured logging, rate limiting, and deeper health/readiness checks.
+- Add unit & integration tests.
 
 ## Handy URLs
 
