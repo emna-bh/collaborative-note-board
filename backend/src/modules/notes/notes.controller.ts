@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -22,6 +23,7 @@ import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { QueryNotesDto } from './dto/query-notes.dto';
+import { ReorderNotesDto } from './dto/reorder-notes.dto';
 
 @ApiTags('notes')
 @ApiBearerAuth()
@@ -52,16 +54,30 @@ export class NotesController {
     return this.notesService.findOne(noteId);
   }
 
+  @Patch('reorder')
+  @ApiOperation({ summary: 'Reorder notes on the board' })
+  reorder(@Body() dto: ReorderNotesDto) {
+    return this.notesService.reorder(dto.noteIds);
+  }
+
   @Patch(':noteId')
   @ApiOperation({ summary: 'Update a note' })
-  update(@Param('noteId') noteId: string, @Body() dto: UpdateNoteDto) {
-    return this.notesService.update(noteId, dto);
+  update(
+    @Param('noteId') noteId: string,
+    @Body() dto: UpdateNoteDto,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return this.notesService.update(noteId, dto, user);
   }
 
   @Delete(':noteId')
+  @HttpCode(204)
   @ApiOperation({ summary: 'Delete a note' })
-  @ApiResponse({ status: 200, description: 'Note deleted' })
-  remove(@Param('noteId') noteId: string) {
-    return this.notesService.remove(noteId);
+  @ApiResponse({ status: 204, description: 'Note deleted' })
+  remove(
+    @Param('noteId') noteId: string,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    return this.notesService.remove(noteId, user);
   }
 }

@@ -1,30 +1,19 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
-import { CurrentUserDecorator } from '../../common/decorators/current-user.decorator';
-import * as currentUserInterface from '../auth/interfaces/current-user.interface';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { HealthService } from './health.service';
 
-@ApiTags('Test')
-@ApiBearerAuth()
-@Controller('Test-auth')
+@ApiTags('health')
+@Controller('health')
 export class HealthController {
-  @Get('me')
-  @UseGuards(FirebaseAuthGuard)
-  @ApiOperation({ summary: 'Get current authenticated user' })
+  constructor(private readonly healthService: HealthService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Simple health check' })
   @ApiResponse({
     status: 200,
-    description: 'Returns the authenticated user',
+    description: 'Service is healthy',
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - missing or invalid token',
-  })
-  getMe(@CurrentUserDecorator() user: currentUserInterface.CurrentUser) {
-    return user;
+  getHealth() {
+    return this.healthService.getStatus();
   }
 }
