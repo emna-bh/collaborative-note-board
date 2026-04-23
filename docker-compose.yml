@@ -1,0 +1,92 @@
+services:
+  firebase-emulators:
+    build:
+      context: ./firebase-emulators
+      dockerfile: Dockerfile
+    container_name: firebase-emulators
+    working_dir: /app
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "8080:8080"   # Firestore emulator
+      - "9099:9099"   # Auth emulator
+    volumes:
+      - ./firebase-emulators:/app
+      - firebase_emulator_cache:/root/.cache/firebase
+    command: >
+      sh -c "firebase emulators:start --project demo-noteboard"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: notes-backend
+    working_dir: /app
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: development
+
+      # Firebase Admin SDK -> Auth emulator
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulators:9099
+
+      # Firestore emulator
+      FIRESTORE_EMULATOR_HOST: firebase-emulators:8080
+
+      # Your backend config
+      FIREBASE_PROJECT_ID: demo-noteboard
+
+      # Frontend origin for CORS
+      FRONTEND_URL: http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      firebase-emulators:
+        condition: service_healthy
+    command: npm run start:dev
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/api >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: notes-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  firebase_emulator_cache:
