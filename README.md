@@ -1,12 +1,36 @@
 # Collaborative Note Board
 
-A full-stack collaborative board where authenticated users can create, edit, delete, reorder, and watch notes update in real time. The app uses Firebase emulators for local authentication and Firestore persistence, a NestJS backend for API and websocket orchestration, and a Next.js frontend for the board UI.
+A full-stack collaborative note board where multiple authenticated users can create, edit, reorder, and delete notes in real time.
 
-## What is in this repo
+The application focuses on:
+- responsive UX with optimistic updates
+- real-time synchronization across clients
+- clean separation between frontend, backend, and infrastructure
+
+## Repository Structure
 
 - `frontend/`: Next.js app for authentication, notes UI, and realtime activity feed
 - `backend/`: NestJS API, Firebase Admin integration, websocket gateway, and seed script
-- Local Firebase Emulator config lives in `backend/firebase.json`
+- `backend/firebase.json` : Firebase emulator configuration is located in:
+
+## Features
+
+- Collaborative note board (shared across users)
+- Inline note creation
+- Edit notes via dialog
+- Delete notes
+- Drag & drop reordering
+- Real-time updates with Socket.IO
+- Optimistic UI updates (instant feedback)
+- Activity feed (live updates)
+- Authentication via Firebase Auth (emulator)
+
+## Key Design Decisions
+
+- Single shared board to simplify real-time synchronization
+- Backend acts as a single source of truth for notes and activity
+- React Query used for server state + optimistic updates
+- Socket.IO used for real-time synchronization instead of polling
 
 ## Setup Instructions
 
@@ -30,10 +54,10 @@ cd frontend
 npm install
 ```
 
-The repo already includes local env files for the default emulator setup:
+The repo already includes env files examples for the default emulator setup:
 
-- `backend/.env`
-- `frontend/.env.local`
+- `backend/.env.example`
+- `frontend/.env.example`
 
 ### 2. Start the Firebase emulators
 
@@ -54,7 +78,7 @@ This starts:
 From `backend/` in a second terminal:
 
 ```bash
-npm run start:dev
+npm run start
 ```
 
 Backend URLs:
@@ -102,6 +126,14 @@ Default seeded credentials:
 4. Run the seed script if you want demo data
 
 If the frontend loads but login or realtime updates do not work, the first thing to check is whether the emulators are still running.
+
+## Running with Docker (optional)
+
+You can run the full stack (frontend, backend, Firebase emulators) using Docker:
+
+```bash
+docker compose up --build
+```
 
 ## Architecture Overview
 
