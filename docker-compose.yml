@@ -13,7 +13,7 @@ services:
       - ./firebase-emulators:/app
       - firebase_emulator_cache:/root/.cache/firebase
     command: >
-      sh -c "firebase emulators:start --project demo-noteboard"
+      sh -c "firebase emulators:start --project demo-no-project"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000 >/dev/null || exit 1"]
       interval: 10s
@@ -42,7 +42,7 @@ services:
       FIRESTORE_EMULATOR_HOST: firebase-emulators:8080
 
       # Your backend config
-      FIREBASE_PROJECT_ID: demo-noteboard
+      FIREBASE_PROJECT_ID: demo-no-project
 
       # Frontend origin for CORS
       FRONTEND_URL: http://localhost:3000
@@ -74,6 +74,11 @@ services:
       PORT: 3000
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: http://127.0.0.1:9099
+      NEXT_PUBLIC_FIREBASE_API_KEY: demo-api-key
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: demo-no-project.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: demo-no-project
+
     volumes:
       - ./frontend:/app
       - /app/node_modules
